@@ -44,7 +44,7 @@ model InterviewPreference {
   id                Int      @id @default(autoincrement())
   userId            Int      @unique
 
-  role              String   @default("Software Developer")
+  role              String   @default("No Role Selected!")
   difficulty        String   @default("Intermediate")
   interviewType     String   @default("Mixed")
   duration          Int      @default(30)
