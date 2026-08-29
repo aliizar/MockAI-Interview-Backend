@@ -6,6 +6,21 @@ datasource db {
   provider = "postgresql"
 }
 
+
+enum InterviewStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum QuestionType {
+  TECHNICAL
+  BEHAVIORAL
+  SITUATIONAL
+  FOLLOW_UP
+}
+
+
 model User {
   id                  Int                   @id @default(autoincrement())
   name                String
@@ -16,6 +31,7 @@ model User {
   verificationTokens  EmailVerificationToken[]
   passwordResetTokens PasswordResetToken[]
   interviewPreference InterviewPreference?
+  interviews          Interview[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 }
@@ -51,9 +67,52 @@ model InterviewPreference {
 
   rememberHistory   Boolean  @default(true)
   recommendations   Boolean  @default(true)
-
+  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model Interview {
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  role          String
+  difficulty    String
+  interviewType String
+  duration      Int
+
+  startedAt     DateTime        @default(now())
+  endedAt       DateTime?
+  status        InterviewStatus @default(ACTIVE)
+
+  overallScore  Float?
+  feedback      Json?
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions     InterviewQuestion[]
+}
+
+model InterviewQuestion {
+  id             Int          @id @default(autoincrement())
+  interviewId    Int
+
+  questionNumber Int
+  question       String
+  type           QuestionType
+  answer         String?
+
+  score          Float?
+  feedback       Json?
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  interview      Interview    @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, questionNumber])
 }
