@@ -224,3 +224,57 @@ export async function getInterviewEvaluationContext(
     })),
   };
 }
+
+export async function getInterviewHistory(userId: number) {
+  return await prisma.interview.findMany({
+    where: {
+      userId,
+    },
+    orderBy: {
+      startedAt: "desc",
+    },
+    select: {
+      id: true,
+      role: true,
+      difficulty: true,
+      interviewType: true,
+      duration: true,
+      startedAt: true,
+      endedAt: true,
+      status: true,
+      overallScore: true,
+    },
+  });
+}
+
+export async function getInterviewDetails(interviewId: number, userId: number) {
+  const interview = await prisma.interview.findFirst({
+    where: {
+      id: interviewId,
+      userId,
+    },
+    include: {
+      questions: {
+        orderBy: {
+          questionNumber: "asc",
+        },
+        select: {
+          id: true,
+          questionNumber: true,
+          question: true,
+          type: true,
+          answer: true,
+          score: true,
+          feedback: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  return interview;
+}

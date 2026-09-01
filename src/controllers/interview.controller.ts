@@ -11,6 +11,8 @@ import {
 } from "../services/ai/ai.service.js";
 import prisma from "../lib/prisma.js";
 import { getInterviewTimer } from "../lib/interview-timer.js";
+import { getInterviewDetails } from "../services/interview.service.js";
+import { getInterviewHistory } from "../services/interview.service.js";
 export async function startInterview(req: Request, res: Response) {
   try {
     const { role, difficulty, interviewType, duration } = req.body;
@@ -197,3 +199,54 @@ export async function submitInterviewAnswer(req: Request, res: Response) {
     });
   }
 }
+
+export const getHistory = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const interviews = await getInterviewHistory(userId!);
+
+    return res.status(200).json({
+      message: "Interview history fetched successfully",
+      interviews,
+    });
+  } catch (error) {
+    console.error("Failed to fetch interview history:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch interview history",
+    });
+  }
+};
+
+export const getDetails = async (req: Request, res: Response) => {
+  try {
+    const interviewId = Number(req.params.id);
+    const userId = req.userId;
+
+    if (!Number.isInteger(interviewId)) {
+      return res.status(400).json({
+        message: "Invalid interview ID",
+      });
+    }
+
+    const interview = await getInterviewDetails(interviewId, userId!);
+
+    return res.status(200).json({
+      message: "Interview details fetched successfully",
+      interview,
+    });
+  } catch (error) {
+    console.error("Failed to fetch interview details:", error);
+
+    if (error instanceof Error && error.message === "Interview not found") {
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to fetch interview details",
+    });
+  }
+};
