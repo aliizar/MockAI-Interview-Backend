@@ -9,7 +9,8 @@ import {
   generateFirstQuestion,
   generateNextQuestion,
 } from "../services/ai/ai.service.js";
-
+import prisma from "../lib/prisma.js";
+import { getInterviewTimer } from "../lib/interview-timer.js";
 export async function startInterview(req: Request, res: Response) {
   try {
     const { role, difficulty, interviewType, duration } = req.body;
@@ -101,11 +102,55 @@ export async function submitInterviewAnswer(req: Request, res: Response) {
     // 1. Save candidate answer
     await saveInterviewAnswer(interviewId, req.userId, answer.trim());
 
+    const interview = await prisma.interview.findFirst({
+      where: {
+        id: interviewId,
+        userId: req.userId,
+        status: "ACTIVE",
+      },
+    });
+
+    if (!interview) {
+      return res.status(404).json({
+        message: "Active interview not found",
+      });
+    }
+
+    const timer = getInterviewTimer({
+      startedAt: interview.startedAt,
+      duration: interview.duration,
+    });
+
+    if (timer.isExpired) {
+      const completedInterview = await prisma.interview.update({
+        where: {
+          id: interview.id,
+        },
+        data: {
+          status: "COMPLETED",
+          endedAt: new Date(),
+        },
+      });
+
+      return res.status(200).json({
+        message: "Interview completed",
+        interviewEnded: true,
+        interview: {
+          id: completedInterview.id,
+          status: completedInterview.status,
+          endedAt: completedInterview.endedAt,
+        },
+      });
+    }
     // 2. Get complete interview context
     const context = await getInterviewContext(interviewId, req.userId);
 
     // 3. Ask Gemini for the next question
-    const nextQuestion = await generateNextQuestion(context);
+    const nextQuestion = await generateNextQuestion(
+      context,
+      timer.remainingSeconds,
+      timer.stage,
+    );
 
     // 4. Determine the next question number
     const questionNumber = context.conversation.length + 1;

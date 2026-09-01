@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import type { InterviewEvaluation } from "../schemas/interview-evaluation.schema.js";
 
 interface CreateInterviewData {
   userId: number;
@@ -120,6 +121,103 @@ export async function getInterviewContext(interviewId: number, userId: number) {
     interviewType: interview.interviewType,
     duration: interview.duration,
     conversation: interview.questions.map((question) => ({
+      question: question.question,
+      answer: question.answer!,
+      type: question.type,
+    })),
+  };
+}
+
+export async function saveInterviewEvaluation(
+  interviewId: number,
+  userId: number,
+  evaluation: InterviewEvaluation,
+) {
+  const interview = await prisma.interview.findFirst({
+    where: {
+      id: interviewId,
+      userId,
+    },
+  });
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  const updatedInterview = await prisma.interview.update({
+    where: {
+      id: interviewId,
+    },
+    data: {
+      overallScore: evaluation.overallScore,
+      feedback: {
+        technicalScore: evaluation.technicalScore,
+        communicationScore: evaluation.communicationScore,
+        problemSolvingScore: evaluation.problemSolvingScore,
+        strengths: evaluation.strengths,
+        weaknesses: evaluation.weaknesses,
+        feedback: evaluation.feedback,
+        recommendations: evaluation.recommendations,
+      },
+    },
+  });
+
+  for (const questionEvaluation of evaluation.questionEvaluations) {
+    await prisma.interviewQuestion.updateMany({
+      where: {
+        interviewId,
+        questionNumber: questionEvaluation.questionNumber,
+      },
+      data: {
+        score: questionEvaluation.score,
+        feedback: questionEvaluation.feedback,
+      },
+    });
+  }
+
+  return updatedInterview;
+}
+
+export async function getInterviewEvaluationContext(
+  interviewId: number,
+  userId: number,
+) {
+  const interview = await prisma.interview.findFirst({
+    where: {
+      id: interviewId,
+      userId,
+    },
+    include: {
+      questions: {
+        where: {
+          answer: {
+            not: null,
+          },
+        },
+        orderBy: {
+          questionNumber: "asc",
+        },
+        select: {
+          questionNumber: true,
+          question: true,
+          answer: true,
+          type: true,
+        },
+      },
+    },
+  });
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  return {
+    role: interview.role,
+    difficulty: interview.difficulty,
+    interviewType: interview.interviewType,
+    duration: interview.duration,
+    conversation: interview.questions.map((question) => ({
+      questionNumber: question.questionNumber,
       question: question.question,
       answer: question.answer!,
       type: question.type,

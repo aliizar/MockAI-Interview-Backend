@@ -96,6 +96,8 @@ Return the result using the requested JSON schema.
 
 export async function generateNextQuestion(
   context: InterviewContext,
+  remainingSeconds: number,
+  stage: "NORMAL" | "FINAL" | "EXPIRED",
 ): Promise<FirstQuestion> {
   const conversation = context.conversation
     .map(
@@ -121,7 +123,8 @@ Job Role: ${context.role}
 Difficulty: ${context.difficulty}
 Interview Type: ${context.interviewType}
 Interview Duration: ${context.duration} minutes
-
+Time remaining: ${remainingSeconds} seconds
+Interview stage: ${stage}
 Here is the interview conversation so far:
 
 ${conversation}
@@ -141,6 +144,24 @@ Rules:
 - Keep the question appropriate for a live interview.
 - Do not generate an answer.
 - Do not generate multiple questions.
+
+Interview timing rules:
+
+If the interview stage is NORMAL:
+- Continue the adaptive interview naturally.
+- Ask a relevant question based on the candidate's previous answer.
+
+If the interview stage is FINAL:
+- This may be the final question of the interview.
+- Ask ONE concise closing question.
+- The question should be answerable within the remaining time.
+- Do not start a long multi-part technical problem.
+- The question does not have to be behavioral.
+- Choose the most appropriate closing question based on the conversation.
+- It can ask the candidate to reflect, summarize their approach,
+  explain a key decision, or provide a final perspective.
+- Do not mention the timer to the candidate.
+- Do not say "this is your final question."
 
 Return ONLY JSON using the requested schema.
 `;

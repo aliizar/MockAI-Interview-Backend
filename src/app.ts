@@ -22,4 +22,5 @@ app.use("/api/auth/v1", authRoutes);
 app.use("/api/preferences/v1", preferenceRoutes);
 app.use("/api/interviews/v1", interviewRoutes);
 app.use("/api/test/v1", aiTestRoutes);
+
 export default app;
