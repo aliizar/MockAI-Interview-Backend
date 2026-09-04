@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "InterviewStatus" AS ENUM ('ACTIVE', 'COMPLETED', 'CANCELLED');
+CREATE TYPE "InterviewStatus" AS ENUM ('ACTIVE', 'COMPLETED', 'CANCELLED' );
 
 -- CreateEnum
 CREATE TYPE "QuestionType" AS ENUM ('TECHNICAL', 'BEHAVIORAL', 'SITUATIONAL', 'FOLLOW_UP');

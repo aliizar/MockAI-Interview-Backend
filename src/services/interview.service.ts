@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import type { InterviewEvaluation } from "../schemas/interview-evaluation.schema.js";
+import { evaluateInterviewWithOpenRouter } from "./ai/openrouter.service.js";
 
 interface CreateInterviewData {
   userId: number;
@@ -229,6 +230,7 @@ export async function getInterviewHistory(userId: number) {
   return await prisma.interview.findMany({
     where: {
       userId,
+      status: "COMPLETED",
     },
     orderBy: {
       startedAt: "desc",
@@ -277,4 +279,90 @@ export async function getInterviewDetails(interviewId: number, userId: number) {
   }
 
   return interview;
+}
+
+export async function endInterview(interviewId: number, userId: number) {
+  const interview = await prisma.interview.findFirst({
+    where: {
+      id: interviewId,
+      userId,
+      status: "ACTIVE",
+    },
+  });
+
+  if (!interview) {
+    throw new Error("Active interview not found");
+  }
+
+  const answeredQuestions = await prisma.interviewQuestion.count({
+    where: {
+      interviewId,
+      answer: {
+        not: null,
+      },
+    },
+  });
+
+  if (answeredQuestions === 0) {
+    throw new Error("No answered questions");
+  }
+
+  return await prisma.interview.update({
+    where: {
+      id: interviewId,
+    },
+    data: {
+      status: "COMPLETED",
+      endedAt: new Date(),
+    },
+  });
+}
+
+export async function markInterviewAsFailed(
+  interviewId: number,
+  userId: number,
+) {
+  const interview = await prisma.interview.findFirst({
+    where: {
+      id: interviewId,
+      userId,
+      status: {
+        in: ["ACTIVE", "COMPLETED"],
+      },
+    },
+  });
+
+  if (!interview) {
+    return null;
+  }
+
+  return await prisma.interview.update({
+    where: {
+      id: interviewId,
+    },
+    data: {
+      status: "FAILED",
+      endedAt: interview.endedAt ?? new Date(),
+    },
+  });
+}
+
+export async function evaluateAndSaveInterview(
+  interviewId: number,
+  userId: number,
+) {
+  const context = await getInterviewEvaluationContext(interviewId, userId);
+
+  const evaluation = await evaluateInterviewWithOpenRouter(context);
+
+  const savedInterview = await saveInterviewEvaluation(
+    interviewId,
+    userId,
+    evaluation,
+  );
+
+  return {
+    savedInterview,
+    evaluation,
+  };
 }

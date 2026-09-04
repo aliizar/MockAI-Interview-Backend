@@ -11,6 +11,7 @@ enum InterviewStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+  FAILED
 }
 
 enum QuestionType {

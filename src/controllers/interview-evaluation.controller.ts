@@ -1,13 +1,18 @@
 import { Request, Response } from "express";
 import {
-  getInterviewEvaluationContext,
-  saveInterviewEvaluation,
+  evaluateAndSaveInterview,
+  markInterviewAsFailed,
 } from "../services/interview.service.js";
-import { evaluateInterviewWithOpenRouter } from "../services/ai/openrouter.service.js";
 
 export const evaluateInterview = async (req: Request, res: Response) => {
   try {
     const interviewId = Number(req.params.id);
+
+    if (!req.userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
 
     if (!Number.isInteger(interviewId)) {
       return res.status(400).json({
@@ -15,29 +20,26 @@ export const evaluateInterview = async (req: Request, res: Response) => {
       });
     }
 
-    const context = await getInterviewEvaluationContext(
-      interviewId,
-      req.userId!,
-    );
-
-    const evaluation = await evaluateInterviewWithOpenRouter(context);
-
-    const savedInterview = await saveInterviewEvaluation(
-      interviewId,
-      req.userId!,
-      evaluation,
-    );
+    const result = await evaluateAndSaveInterview(interviewId, req.userId);
 
     return res.status(200).json({
       message: "Interview evaluated and saved successfully",
-      interview: savedInterview,
-      evaluation,
+      interview: result.savedInterview,
+      evaluation: result.evaluation,
     });
   } catch (error) {
     console.error("Interview evaluation failed:", error);
 
+    const interviewId = Number(req.params.id);
+
+    if (req.userId && Number.isInteger(interviewId)) {
+      await markInterviewAsFailed(interviewId, req.userId);
+    }
+
     return res.status(500).json({
-      message: "Failed to evaluate interview",
+      message: "INTERVIEW_FAILED",
+      error:
+        "Sorry for the inconvenience. Your interview could not be completed. Please try again later.",
     });
   }
 };

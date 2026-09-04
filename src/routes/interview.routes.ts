@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getDetails,
   getHistory,
+  manuallyEndInterview,
   startInterview,
   submitInterviewAnswer,
 } from "../controllers/interview.controller.js";
@@ -15,4 +16,5 @@ router.post("/:interviewId/answer", authenticate, submitInterviewAnswer);
 router.post("/:id/evaluate", authenticate, evaluateInterview);
 router.get("/history", authenticate, getHistory);
 router.get("/:id", authenticate, getDetails);
+router.post("/:id/end", authenticate, manuallyEndInterview);
 export default router;
