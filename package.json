@@ -16,6 +16,7 @@
   "dependencies": {
     "@ai-sdk/cerebras": "^3.0.41",
     "@google/genai": "^2.19.0",
+    "@mistralai/mistralai": "^2.6.4",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcrypt": "^6.0.0",
@@ -24,6 +25,7 @@
     "express": "^5.2.1",
     "groq-sdk": "^1.6.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.3.0",
     "pg": "^8.23.0",
     "prisma": "^7.9.1",
     "resend": "^6.21.0",
@@ -34,6 +36,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
     "@types/node": "^26.2.0",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"

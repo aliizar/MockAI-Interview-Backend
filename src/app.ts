@@ -5,6 +5,7 @@ import preferenceRoutes from "./routes/preference.routes.js";
 import interviewRoutes from "./routes/interview.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import resumeRoutes from "./routes/resume.routes.js";
 const app = express();
 
 app.use(express.json());
@@ -24,4 +25,5 @@ app.use("/api/preferences/v1", preferenceRoutes);
 app.use("/api/interviews/v1", interviewRoutes);
 app.use("/api/dashboard/v1", dashboardRoutes);
 app.use("/api/notifications/v1", notificationRoutes);
+app.use("/api/resume/v1", resumeRoutes);
 export default app;
