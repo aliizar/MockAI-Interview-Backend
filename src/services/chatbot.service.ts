@@ -32,14 +32,6 @@ export async function processChat(
     });
   }
 
-  await prisma.chatMessage.create({
-    data: {
-      conversationId: conversation.id,
-      role: "USER",
-      content: message,
-    },
-  });
-
   const previousMessages = await prisma.chatMessage.findMany({
     where: {
       conversationId: conversation.id,
@@ -102,6 +94,28 @@ If you do not know something, say so clearly.
       content: reply,
     },
   });
+
+  await prisma.chatMessage.create({
+    data: {
+      conversationId: conversation.id,
+      role: "ASSISTANT",
+      content: reply!,
+    },
+  });
+
+  await prisma.chatConversation.update({
+    where: {
+      id: conversation.id,
+    },
+    data: {
+      updatedAt: new Date(),
+    },
+  });
+
+  return {
+    conversationId: conversation.id,
+    reply,
+  };
 
   return {
     conversationId: conversation.id,
